@@ -1087,13 +1087,15 @@ subroutine add_typedef( dyn_strings )
   &   '   integer, intent(inout)                       :: count_dvar',&
   &   '   '                                                          ,&
   &   '   integer                                      :: newsize   ',&
+  &   '   integer                                      :: size_dvar ',&
   &   '   type('//trim(typename)//'), dimension(:), pointer :: newvar',&
   &   '   '                                                          ,&
   &   '   count_dvar = count_dvar + 1',&
-  &   '   if (count_dvar .gt. size(dvar)) then',&
-  &   '       newsize = size(dvar) * 2',&
+  &   '   size_dvar = size(dvar)',&
+  &   '   if (count_dvar .gt. size_dvar) then',&
+  &   '       newsize = size_dvar * 2',&
   &   '       allocate(newvar(1:newsize))',&
-  &   '       newvar(1:newsize-1) = dvar',&
+  &   '       newvar(1:size_dvar) = dvar',&
   &   '       deallocate(dvar)',&
   &   '       dvar => newvar',&
   &   '   endif',&
