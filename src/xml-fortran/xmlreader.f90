@@ -61,7 +61,8 @@ program xmlreader
    
    ! TODO: arrays of integers etc, in addition to integer-arrays - see: word
    integer, parameter                     :: notypes_predefined = 27
-   character(len=50), dimension(1:4,1:notypes_predefined) :: predefined_types
+   character(len=50), dimension(1:4,1:notypes_predefined) &
+                                          :: predefined_types
    integer                                :: notypes = notypes_predefined
    data ((predefined_types(i,j) , i=1,4), j=1,notypes_predefined ) / &
 'logical'       ,'   logical'                        , 'read_xml_logical',       'write_to_xml_logical', &
@@ -137,13 +138,23 @@ program xmlreader
    luinit   = 23
    luwritp  = 24
    luwrv    = luwritp
+
    open( ludef,   file = trim(fname)//'.f90' )
    open( lusubs,  status = 'scratch' )
    open( luinit,  status = 'scratch' )
    open( luwritp, status = 'scratch' )
+
+   write( ludef, '(a)' ) '!!!! WRITE LUDEF, main'
+   write( lusubs, '(a)') '!!!! WRITE LUSUBS, main'
+   write( luinit, '(a)') '!!!! WRITE LUINIT, main'
+   write( luwritp, '(a)') '!!!! WRITE LUWRITP, main'
+   write( luwrv, '(a)') '!!!! WRITE LUWRV, main'
+
    call open_tmp_files( 31 )
 
    lumain   = luloop
+
+   write( lumain, '(a)') '!!!! WRITE LUMAIN, main'
 
    ! Read the template file and act as we go along:
    ! - write the declarations
@@ -281,9 +292,9 @@ program xmlreader
          begin_component = .true.
 
       case default
-         write(20,*) 'Unknown tag: ',trim(tag)
-         write(20,*) '-- terminating the program!'
-         stop
+      !   write(20,*) 'Unknown tag: ',trim(tag)
+      !   write(20,*) '-- terminating the program!'
+      !   stop
       end select
    end do
 
@@ -426,12 +437,20 @@ subroutine open_tmp_files( lufirst )
    luend    = lufirst + 3
    ludeflt  = lufirst + 4
    luwrite  = lufirst + 5
+
    open( luprolog, status = 'scratch' )
    open( lustart,  status = 'scratch' )
    open( luloop,   status = 'scratch' )
    open( luend,    status = 'scratch' )
    open( ludeflt,  status = 'scratch' )
    open( luwrite,  status = 'scratch' )
+
+   write( luprolog, '(a)' ) '!!!! WRITE LUPROLOG, open_tmp_files'
+   write( lustart, '(a)' ) '!!!! WRITE LUSTART, open_tmp_files'
+   write( luloop, '(a)') '!!!! WRITE LULOOP, open_tmp_files'
+   write( luend, '(a)') '!!!! WRITE LUEND, open_tmp_files'
+   write( ludeflt, '(a)') '!!!! WRITE LUDEFLT, open_tmp_files'
+   write( luwrite, '(a)') '!!!! WRITE LUWRITE, open_tmp_files'
 end subroutine open_tmp_files
 
 !===============================================================================
@@ -548,6 +567,7 @@ end subroutine merge_files
 
 subroutine write_prolog
    write( ludef, '(a)' ) &
+  &   '!!!! WRITE LUDEF, write_prolog', &
   &   'module xml_data_' // trim(fname), &
   &   '   use READ_XML_PRIMITIVES', &
   &   '   use WRITE_XML_PRIMITIVES', &
@@ -558,6 +578,7 @@ subroutine write_prolog
   &   '   logical, private :: strict_'
 
    write( luprolog, '(a)' ) &
+  &   '!!!! WRITE LUPROLOG, write_prolog', &
   &   'subroutine read_xml_file_'//trim(fname)//'(fname, lurep, errout)' , &
   &   '   character(len=*), intent(in)           :: fname'     , &
   &   '   integer, intent(in), optional          :: lurep'     , &
@@ -574,11 +595,13 @@ subroutine write_prolog
   &   '   integer                                :: nodata'
 
    write( lusubs, '(a)' ) &
+  &   '!!!! WRITE LUSUBS, write_prolog', &
   &   'contains'
    write( luinit, '(a)' ) &
   &   'subroutine init_xml_file_'//trim(fname)
 
    write( luwritp, '(a)' ) &
+  &   '!!!! WRITE LUWRITP, write_prolog', &
   &   'subroutine write_xml_file_'//trim(fname)//'(fname, lurep)' , &
   &   '   character(len=*), intent(in)           :: fname'     , &
   &   '   integer, intent(in), optional          :: lurep'     , &
@@ -595,6 +618,7 @@ subroutine write_prolog
   &   '      ''<' // trim(root_name) // '>'''
 
    write( lumain, '(a)' ) &
+      &   '!!!! WRITE LUMAIN, write_prolog', &
       &   '   ', &
       &   '   call init_xml_file_'//trim(fname), &
       &   '   call xml_open( info, fname, .true. )', &
@@ -635,6 +659,7 @@ subroutine add_begin_loop( checktag, component )
 
    if ( component ) then
       write( luloop, '(a)' ) &
+  &   '!!!! WRITE LULOOP, add_begin_loop', &
   &   '   call init_xml_type_'//trim(typename)//'(dvar)', &
   &   '   has_dvar = .true.'
    endif
@@ -643,6 +668,7 @@ subroutine add_begin_loop( checktag, component )
 
    if ( component ) then
       write( luloop, '(a)' ) &
+     &   '!!!! WRITE LULOOP, add_begin_loop, component .eq. true', &
      &   '   error  = .false.'     ,&
      &   '   att_   = 0'           ,&
      &   '   noatt_ = noattribs+1' ,&
@@ -680,6 +706,7 @@ subroutine add_begin_loop( checktag, component )
      &   '      endif'
    else
       write( luloop, '(a)' ) &
+     &   '!!!! WRITE LULOOP, add_begin_loop, component .eq. false', &
      &   '   error = .false.' ,&
      &   '   do',  &
      &   '      call xml_get( info, tag, endtag, attribs, noattribs, data, nodata )' ,&
@@ -691,11 +718,13 @@ subroutine add_begin_loop( checktag, component )
    endif
    if ( checktag ) then
       write( luloop, '(a)' ) &
+  &   '!!!! WRITE LULOOP, add_begin_loop, checktag .eq. true', &
   &   '      if ( endtag .and. tag == starttag ) then'  ,&
   &   '         exit'                                     ,&
   &   '      endif'
    endif
    write( luloop, '(a)' ) &
+  &   '!!!! WRITE LULOOP, add_begin_loop', &
   &   '      if ( endtag .and. noattribs == 0 ) then'   ,&
   &   '         if ( xml_ok(info) ) then'                 ,&
   &   '            cycle'                                 ,&
@@ -716,6 +745,7 @@ end subroutine add_begin_loop
 subroutine add_end_loop
 
    write( luend, '(a)' ) &
+  &   '!!!! WRITE LUEND, add_end_loop',&
   &   '      case (''comment'', ''!--'')' ,&
   &   '         ! Simply ignore', &
   &   '      case default' ,&
@@ -726,6 +756,7 @@ subroutine add_end_loop
   &   '         endif'
 
    write( luend, '(a)' ) &
+  &   '!!!! WRITE LUEND, add_end_loop',&
   &   '      end select' ,&
   &   '      nodata = 0' ,&
   &   '      if ( .not. xml_ok(info) ) exit' , &
@@ -783,6 +814,20 @@ subroutine add_variable( component )
          if ( dim == '1' ) then
             idx3 = xml_find_attrib( types, notypes, vartype, declare )
             if ( idx3 > notypes_predefined ) then
+
+!VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+                write( luprolog, '(a)') '!!!! WRITE LUPROLOG, add_variable, idx7>=1'
+                write( luprolog, '(a)') &
+                    '   type('//trim(vartype)//'), dimension(:), pointer :: temp_'// &
+                    trim(varname)//' => null()'
+                write( luprolog, '(a)') &
+                    '   integer :: count_'//trim(varname)
+
+                write( lustart, '(a)') '!!!! WRITE LUSTART, add_variable, idx7>=1'
+                write( lustart, '(a)') &
+                    '   count_'//trim(varname)//' = 0'
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
                vartype = trim(vartype) // '-array'
             else
                vartype = trim(vartype) // '-1dim'
@@ -834,12 +879,14 @@ subroutine add_variable( component )
       endif
 
       if ( index( declare, "?" ) <= 0 ) then
+         write( ludef, '(a)') '!!!! WRITE LUDEF, add_variable'
          write( ludef,    '(4a)' ) declare,    ' :: ', trim(varname), trim(initptr)
       else
          if ( strlength == "--" ) then
              strlength = "1" ! Hm, error is better?
          endif
          idx5 = index( declare, "?" )
+         write( ludef, '(a)') '!!!! WRITE LUDEF, add_variable'
          write( ludef,    '(6a)' ) declare(1:idx5-1), trim(strlength), declare(idx5+1:), &
             ' :: ', trim(varname), trim(initptr)
       endif
@@ -847,31 +894,54 @@ subroutine add_variable( component )
       if ( idx6 > 0 ) then
          k = index( types(2,idx3-1), '?' )
          if ( k <= 0 ) then
+            write( luprolog, '(a)') '!!!! WRITE LUPROLOG, add_variable, k<=0'
             write( luprolog, '(3a)' ) types(2,idx3-1), ' :: ', 'p_'//trim(varname)
          else
+            write( luprolog, '(a)') '!!!! WRITE LUPROLOG, add_variable, k>0'
             write( luprolog, '(6a)' ) types(2,idx3-1)(1:k-1), trim(strlength), &
                types(2,idx3-1)(k+1:), ' :: ', 'p_'//trim(varname)
          endif
       endif
+      write( luprolog, '(a)') '!!!! WRITE LUPROLOG, add_variable'
       write( luprolog, '(3a)' ) types(2,1), ' :: ', 'has_'//trim(varname)
+      write( lustart, '(a)') '!!!! WRITE LUSTART, add_variable'
       write( lustart,  '(3a)' ) '   has_', varname, ' = .false.'
       if ( dim /= '--' ) then
-         write( lustart,  '(3a)' ) '   allocate(' // trim(varcomp), '(0))'
+!VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+          write( lustart, '(a)') '!!!! WRITE LUSTART, add_variable'
+         write( lustart,  '(3a)' ) '   allocate(' // trim(varcomp), '(1))'
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       endif
+      write( luloop, '(a)') '!!!! WRITE LULOOP, add_variable'
       write( luloop,   '(a)' ) '      case('''//trim(vartag)//''')'
 
       if ( idx6 <= 0 ) then
-         write( luloop,   '(a)' ) &
-            &'         call '//trim(types(3,idx3))//'( &', &
-            &'            info, tag, endtag, attribs, noattribs, data, nodata, &',&
-            &'            ' // trim(varcomp) // ', has_'//trim(varname) // ' )'
+!VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+         write( luloop, '(a)') '!!!! WRITE LULOOP, add_variable, idx6<=0, varcomp='// &
+            trim(varcomp)  
+         write( luloop, '(a,i2,a,i2,a,i2)') '!!!!        varname=' // trim(varname) // ', vartype=' // &
+            trim(vartype) // ', idx3=', idx3, ', idx6=', idx6, ', idx7=', idx7
+         if (idx7 >= 0) then
+             write( luloop,   '(a)' ) &
+                &'         call '//trim(types(3,idx3))//'( &', &
+                &'            info, tag, endtag, attribs, noattribs, data, nodata, &',&
+                &'            '//trim(varcomp)//', has_'//trim(varname)//', count_'//trim(varname)//' )'
+         else
+             write( luloop,   '(a)' ) &
+                &'         call '//trim(types(3,idx3))//'( &', &
+                &'            info, tag, endtag, attribs, noattribs, data, nodata, &',&
+                &'            ' // trim(varcomp) // ', has_'//trim(varname) // ' )'
+         endif
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
       else
+         write( luloop, '(a)') '!!!! WRITE LULOOP, add_variable, idx6>0'
          write( luloop,   '(a)' ) &
             &'         call '//trim(types(3,idx3))//'( &', &
             &'            info, tag, endtag, attribs, noattribs, data, nodata, &',&
             &'            p_' // trim(varname) // ', has_'//trim(varname) // ' )',&
             &'         if ( has_'//trim(varname) // ') then'
          if ( vdim == 1 ) then
+             write( luloop, '(a)') '!!!! WRITE LULOOP, add_variable, idx6>0, vdim==1'
              write( luloop,   '(a)' ) &
             &'            if ( size('//trim(varcomp)//') <= size(p_'//trim(varname)//') ) then', &
             &'               '//trim(varcomp) // ' = p_'//trim(varname)//'(1:size('//trim(varcomp)//'))', &
@@ -879,6 +949,7 @@ subroutine add_variable( component )
             &'               '//trim(varcomp) // '(1:size(p_'//trim(varname)//')) = p_'//trim(varname), &
             &'            endif'
          else
+             write( luloop, '(a)') '!!!! WRITE LULOOP, add_variable, idx6>0, vdim /= 1'
              write( luloop,   '(a)' ) &
             &'            if ( size(p_'//trim(varname)//') >= size('//trim(varcomp)//') ) then',&
             &'               '//trim(varcomp)//' = reshape(p_'//trim(varname)//', shape('//trim(varcomp)//'))',&
@@ -887,34 +958,61 @@ subroutine add_variable( component )
             &'               call xml_report_errors(info, ''Incorrect number of values for '//trim(varname)//''')', &
             &'            endif'
          endif
+         write( luloop, '(a)') '!!!! WRITE LULOOP, add_variable, idx6>0'
          write( luloop,   '(a)' ) &
             &'            deallocate( p_'//trim(varname)//' )', &
             &'         endif'
       endif
       if ( idx4 <= 0 ) then
+         write( luend, '(a)') '!!!! WRITE LUEND, add_variable, idx4 <= 0'
          write( luend,    '(a)' ) &
          &'   if ( .not. has_'//trim(varname)//' ) then'
 
          if ( component ) then
+             write( luend, '(a)') '!!!! WRITE LUEND, add_variable, idx4<=0, component=true'
             write( luend,    '(a)' ) &
          &'      has_dvar = .false.'
          else
+             write( luend, '(a)') '!!!! WRITE LUEND, add_variable, idx4<=0, component=false'
             write( luend,    '(a)' ) &
          &'      error = .true.'
          endif
 
+         write( luend, '(a)') '!!!! WRITE LUEND, add_variable, idx4<=0'
          write( luend,    '(a)' ) &
          &'      call xml_report_errors(info, ''Missing data on '//trim(varname)//''')', &
          &'   endif'
+
+!VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+        if (idx7 >= 0) then
+            
+
+
+            write( luend, '(a)') '!!!! WRITE LUEND, add_variable, idx4<=0, idx7>=0' 
+            !write( luend, '(a)') &
+            !    '   print *, "***xmlreader*** '//trim(varcomp)//' has size:", size('//trim(varcomp)//')'
+            !write( luend, '(a)') &
+            !    '   print *, "***xmreader*** count_'//trim(varname)//' has value:", count_'//trim(varname)
+            write( luend, '(a)') &
+                '   allocate(temp_'//trim(varname)//'(1:count_'//trim(varname)//'))', &
+                '   temp_'//trim(varname)//' = '//trim(varcomp)//'(1:count_'//trim(varname)//')', &
+                '   deallocate('//trim(varcomp)//')', &
+                '   '//trim(varcomp)//' => temp_'//trim(varname)
+        endif
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
       else
          !
          ! Note: the attribute value is supposed to have the quotes, if that
          ! is relevant for the variable's type
          !
          if ( component ) then
+            write( ludeflt, '(a)') '!!!! WRITE LUDFLT, add_variable, idx4>0, compoment=true'
             write( ludeflt,    '(4a)' ) &
             &'   dvar%', trim(varname), ' = ', attribs(2,idx4)
          else
+            write( luinit, '(a)') '!!!! WRITE LUINIT, add_variable, idx4>0, component=false'
             write( luinit,   '(4a)' ) &
             &'   ', trim(varname), ' = ', attribs(2,idx4)
          endif
@@ -923,10 +1021,12 @@ subroutine add_variable( component )
       ! Write the component/variable
       !
       if ( component ) then
+         write( luwrite, '(a)') '!!!! WRITE LUWRITE, add_variable, component=true'
          write( luwrite,   '(4a)' ) &
          &'   call '//trim(types(4,idx3))//'(', &
          &' info, '''//trim(vartag)//''', indent+3, dvar%', trim(varname), ')'
       else
+         write( luwrv, '(a)') '!!!! WRITE LUWRV, add_variable, component=false'
          write( luwrv,   '(4a)' ) &
          &'   call '//trim(types(4,idx3))//'(', &
          &' info, '''//trim(vartag)//''', indent+3, ', trim(varname), ')'
@@ -967,11 +1067,14 @@ subroutine add_typedef( dyn_strings )
    endif
 
    if ( .not. error ) then
+      write( ludef, '(a)') '!!!! WRITE LUDEF, add_typedef'
       write( ludef,    '(/,2a)' ) 'type ',trim(typename)
       write( luprolog, '(a)' ) &
+!VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+  &   '!!!! WRITE LUPROLOG, add_typedef', &
   &   'subroutine read_xml_type_'//trim(typename)//'_array( &'      ,&
   &   '      info, tag, endtag, attribs, noattribs, data, nodata, &',&
-  &   '      dvar, has_dvar )'                                      ,&
+  &   '      dvar, has_dvar, count_dvar )'                          ,&
   &   '   type(XML_PARSE)                                 :: info'  ,&
   &   '   character(len=*), intent(inout)                 :: tag    ',&
   &   '   logical, intent(inout)                          :: endtag ',&
@@ -981,23 +1084,29 @@ subroutine add_typedef( dyn_strings )
   &   '   integer, intent(inout)                          :: nodata ',&
   &   '   type('//trim(typename)//'), dimension(:), pointer :: dvar ',&
   &   '   logical, intent(inout)                       :: has_dvar  ',&
+  &   '   integer, intent(inout)                       :: count_dvar',&
   &   '   '                                                          ,&
   &   '   integer                                      :: newsize   ',&
   &   '   type('//trim(typename)//'), dimension(:), pointer :: newvar',&
   &   '   '                                                          ,&
-  &   '   newsize = size(dvar) + 1'                                  ,&
-  &   '   allocate( newvar(1:newsize) )'                             ,&
-  &   '   newvar(1:newsize-1) = dvar'                                ,&
-  &   '   deallocate( dvar )'                                        ,&
-  &   '   dvar => newvar'                                            ,&
+  &   '   count_dvar = count_dvar + 1',&
+  &   '   if (count_dvar .gt. size(dvar)) then',&
+  &   '       newsize = size(dvar) * 2',&
+  &   '       allocate(newvar(1:newsize))',&
+  &   '       newvar(1:newsize-1) = dvar',&
+  &   '       deallocate(dvar)',&
+  &   '       dvar => newvar',&
+  &   '   endif',&
   &   '   '                                                          ,&
   &   '   call read_xml_type_'//trim(typename)// &
   &         '( info, tag, endtag, attribs, noattribs, data, nodata, &',&
-  &   '              dvar(newsize), has_dvar )'                      ,&
+  &   '              dvar(count_dvar), has_dvar )'                      ,&
   &   'end subroutine read_xml_type_'//trim(typename)//'_array'      ,&
   &   '   '
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
       write( luwrite, '(a)' ) &
+  &   '!!!! WRITE LUWRITE, add_typedef', &
   &   'subroutine write_xml_type_'//trim(typename)//'_array( &'     ,&
   &   '      info, tag, indent, dvar )'                             ,&
   &   '   type(XML_PARSE)                                 :: info'  ,&
@@ -1023,6 +1132,7 @@ subroutine add_typedef( dyn_strings )
   &   '       ''<'',trim(tag), ''>'''
 
       write( luprolog, '(a)' ) &
+  &   '!!!! WRITE LUPROLOG, add_typedef',&
   &   'subroutine read_xml_type_'//trim(typename)//&
   &         '( info, starttag, endtag, attribs, noattribs, data, nodata, &' ,&
   &   '              dvar, has_dvar )'                              ,&
@@ -1053,12 +1163,15 @@ subroutine add_typedef( dyn_strings )
       ! when the components of the type are also pointers ...
       !
       write( ludeflt, '(a)' ) &
+  &   '!!!! WRITE LUDEFLT, add_typedef', &
   &   'subroutine init_xml_type_'//trim(typename)//'_array( dvar )  ',&
   &   '   type('//trim(typename)//'), dimension(:), pointer :: dvar ',&
   &   '   if ( associated( dvar ) ) then'                            ,&
   &   '      deallocate( dvar )'                                     ,&
   &   '   endif'                                                     ,&
-  &   '   allocate( dvar(0) )'                                       ,&
+!VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV
+  &   '   allocate( dvar(1) )'                                       ,&
+!^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   &   'end subroutine init_xml_type_'//trim(typename)//'_array'      ,&
   &   'subroutine init_xml_type_'//trim(typename)//'(dvar)'          ,&
   &   '   type('//trim(typename)//') :: dvar '
