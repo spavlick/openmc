@@ -27,3 +27,15 @@ src/templates/*.f90
 
 # Test results error file
 results_error.dat
+
+# This file
+.gitignore
+
+# Vim swp files
+*.swp
+
+# Data files
+data/*
+
+# Benchmark files
+benchmarks/*
