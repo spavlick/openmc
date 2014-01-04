@@ -116,6 +116,11 @@ energy_grid.o: output.o
 
 error.o: global.o
 
+filter_class.o: global.o
+filter_class.o: mesh.o
+filter_class.o: mesh_header.o
+filter_class.o: particle_header.o
+
 finalize.o: global.o
 finalize.o: hdf5_interface.o
 finalize.o: output.o
@@ -394,3 +399,4 @@ vector_header.o: constants.o
 xml_interface.o: constants.o
 xml_interface.o: error.o
 xml_interface.o: global.o
+
