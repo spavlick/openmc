@@ -320,6 +320,8 @@ plot_header.o: constants.o
 
 random_lcg.o: global.o
 
+score_class.o: particle_header.o
+
 search.o: error.o
 search.o: global.o
 
