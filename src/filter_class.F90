@@ -47,6 +47,11 @@ module filter_class
     procedure :: get_filter_bin => get_filter_bin_mesh
   end type MeshFilterClass
 
+  ! Set up pointer type for this class
+  type, public :: FilterClassPointer
+    class(FilterClass), pointer :: p
+  end type FilterClassPointer
+
 contains
 
 !===============================================================================

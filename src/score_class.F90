@@ -29,6 +29,11 @@ module score_class
     procedure :: calculate_score => calculate_score_macro_total_analog
   end type MacroTotalAnaScoreClass
 
+  ! Score Pointer
+  type, public :: ScoreClassPointer
+    class(ScoreClass), pointer :: p => null()
+  end type ScoreClassPointer
+
 contains
 
 !===============================================================================

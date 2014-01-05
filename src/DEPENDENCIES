@@ -370,6 +370,9 @@ tally.o: search.o
 tally.o: string.o
 tally.o: tally_header.o
 
+tally_class.o: filter_class.o
+tally_class.o: tally_header.o
+
 tally_header.o: constants.o
 
 tally_initialize.o: constants.o
