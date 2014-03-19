@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(openmc Fortran)
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules)
 
 # Setup output directories
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -21,7 +22,7 @@ option(verbose  "Create verbose Makefiles"                       OFF)
 if (verbose)
   set(CMAKE_VERBOSE_MAKEFILE on)
 endif()
-
+message(VERSION ${version})
 #===============================================================================
 # MPI for distributed-memory parallelism / HDF5 for binary output
 #===============================================================================
@@ -206,4 +207,41 @@ if(PYTHONINTERP_FOUND)
   install(CODE "execute_process(
                   COMMAND ${PYTHON_EXECUTABLE} setup.py install --user
                   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/utils)")
+endif()
+
+#===============================================================================
+# CPack Configuration
+#===============================================================================
+
+execute_process(
+  COMMAND          /usr/bin/dpkg --print-architecture
+  OUTPUT_VARIABLE  CPACK_DEBIAN_PACKAGE_ARCHITECTURE
+  RESULT_VARIABLE  EXECUTE_RESULT
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  ERROR_QUIET)
+
+if(EXECUTE_RESULT)
+  message(STATUS "dpkg not found: No package generation.")
+else()
+  message(STATUS "Debian architecture: ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
+  set(CPACK_GENERATOR "DEB")
+  set(CPACK_PACKAGE_NAME "${CMAKE_PROJECT_NAME}")
+  set(CPACK_PACKAGE_VERSION "0.5.3")
+  set(CPACK_PACKAGE_CONTACT "OpenMC Development Team  <openmc-users@gmail.com>")
+  set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/mit-crpg/openmc")
+  set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Open source Monte Carlo neutron transport code")
+  set(CPACK_PACKAGE_DESCRIPTION "OpenMC is a Monte Carlo neutron transport code for simulating eigenvalue and fixed source problems")
+  set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE")
+  set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/../readme.rst")
+  set(CPACK_STRIP_FILES TRUE)
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "debhelper (>=8), gfortran (>= 4.6.0)")
+  set(CPACK_DEBIAN_PACKAGE_BUILD_DEPENDS "debhelper (>=8), gfortran (>= 4.6.0)")
+  set(PPA_DEBIAN_VERSION "ppa1")
+  set(DPUT_HOST "kk")
+  include(CPack)
+  if (ENABLE_PPA)
+    message(Package can but uploaded to PPA)
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "any")
+    include(UploadPPA)
+  endif()
 endif()
