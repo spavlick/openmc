@@ -8,14 +8,20 @@ module constants
   ! OpenMC major, minor, and release numbers
   integer, parameter :: VERSION_MAJOR   = 0
   integer, parameter :: VERSION_MINOR   = 5
-  integer, parameter :: VERSION_RELEASE = 1
+  integer, parameter :: VERSION_RELEASE = 4
 
   ! Revision numbers for binary files
-  integer, parameter :: REVISION_SOURCE     = 1
-  integer, parameter :: REVISION_STATEPOINT = 8
+  integer, parameter :: REVISION_STATEPOINT       = 11
+  integer, parameter :: REVISION_PARTICLE_RESTART = 1
+
+  ! Binary file types
+  integer, parameter :: &
+       FILETYPE_STATEPOINT       = -1, &
+       FILETYPE_PARTICLE_RESTART = -2, &
+       FILETYPE_SOURCE           = -3
 
   ! ============================================================================
-  ! ADJUSTABLE PARAMETERS 
+  ! ADJUSTABLE PARAMETERS
 
   ! NOTE: This is the only section of the constants module that should ever be
   ! adjusted. Modifying constants in other sections may cause the code to fail.
@@ -45,16 +51,23 @@ module constants
   integer, parameter :: MAX_WORD_LEN = 150
   integer, parameter :: MAX_FILE_LEN = 255
 
+  ! Maximum number of external source spatial resamples to encounter before an
+  ! error is thrown.
+  integer, parameter :: MAX_EXTSRC_RESAMPLES = 10000
+
   ! ============================================================================
   ! PHYSICAL CONSTANTS
 
+  ! Values here are from the Committee on Data for Science and Technology
+  ! (CODATA) 2010 recommendation (doi:10.1103/RevModPhys.84.1527).
+
   real(8), parameter ::            &
        PI           = 3.1415926535898_8, & ! pi
-       MASS_NEUTRON = 1.0086649156,      & ! mass of a neutron
-       MASS_PROTON  = 1.00727646677,     & ! mass of a proton
-       AMU          = 1.66053873e-27,    & ! 1 amu in kg
-       N_AVOGADRO   = 0.602214179,       & ! Avogadro's number in 10^24/mol
-       K_BOLTZMANN  = 8.617342e-11,      & ! Boltzmann constant in MeV/K
+       MASS_NEUTRON = 1.008664916,       & ! mass of a neutron in amu
+       MASS_PROTON  = 1.007276466812,    & ! mass of a proton in amu
+       AMU          = 1.660538921e-27,   & ! 1 amu in kg
+       N_AVOGADRO   = 0.602214129,       & ! Avogadro's number in 10^24/mol
+       K_BOLTZMANN  = 8.6173324e-11,     & ! Boltzmann constant in MeV/K
        INFINITY     = huge(0.0_8),       & ! positive infinity
        ZERO         = 0.0_8,             &
        ONE          = 1.0_8,             &
@@ -102,9 +115,9 @@ module constants
 
   ! Surface types
   integer, parameter ::  &
-       SURF_PX     =  1, & ! Plane parallel to x-plane 
-       SURF_PY     =  2, & ! Plane parallel to y-plane 
-       SURF_PZ     =  3, & ! Plane parallel to z-plane 
+       SURF_PX     =  1, & ! Plane parallel to x-plane
+       SURF_PY     =  2, & ! Plane parallel to y-plane
+       SURF_PZ     =  3, & ! Plane parallel to z-plane
        SURF_PLANE  =  4, & ! Arbitrary plane
        SURF_CYL_X  =  5, & ! Cylinder along x-axis
        SURF_CYL_Y  =  6, & ! Cylinder along y-axis
@@ -113,6 +126,9 @@ module constants
        SURF_CONE_X =  9, & ! Cone parallel to x-axis
        SURF_CONE_Y = 10, & ! Cone parallel to y-axis
        SURF_CONE_Z = 11    ! Cone parallel to z-axis
+
+  ! Maximum number of lost particles
+  integer, parameter :: MAX_LOST_PARTICLES = 10
 
   ! ============================================================================
   ! CROSS SECTION RELATED CONSTANTS
@@ -132,7 +148,7 @@ module constants
        ELECTRON = 3
 
   ! Angular distribution type
-  integer, parameter :: & 
+  integer, parameter :: &
        ANGLE_ISOTROPIC = 1, & ! Isotropic angular distribution
        ANGLE_32_EQUI   = 2, & ! 32 equiprobable bins
        ANGLE_TABULAR   = 3    ! Tabular angular distribution
@@ -140,7 +156,8 @@ module constants
   ! Secondary energy mode for S(a,b) inelastic scattering
   integer, parameter :: &
        SAB_SECONDARY_EQUAL  = 0, & ! Equally-likely outgoing energy bins
-       SAB_SECONDARY_SKEWED = 1    ! Skewed outgoing energy bins
+       SAB_SECONDARY_SKEWED = 1, & ! Skewed outgoing energy bins
+       SAB_SECONDARY_CONT   = 2    ! Continuous, linear-linear interpolation
 
   ! Elastic mode for S(a,b) elastic scattering
   integer, parameter :: &
@@ -245,11 +262,10 @@ module constants
        EVENT_SURFACE = -2, &
        EVENT_LATTICE = -1, &
        EVENT_SCATTER =  1, &
-       EVENT_ABSORB  =  2, &
-       EVENT_FISSION =  3 
+       EVENT_ABSORB  =  2
 
   ! Tally score type
-  integer, parameter :: N_SCORE_TYPES = 15
+  integer, parameter :: N_SCORE_TYPES = 14
   integer, parameter :: &
        SCORE_FLUX          = -1,  & ! flux
        SCORE_TOTAL         = -2,  & ! total reaction rate
@@ -258,15 +274,14 @@ module constants
        SCORE_SCATTER_N     = -5,  & ! arbitrary scattering moment
        SCORE_SCATTER_PN    = -6,  & ! system for scoring 0th through nth moment
        SCORE_TRANSPORT     = -7,  & ! transport reaction rate
-       SCORE_DIFFUSION     = -8,  & ! diffusion coefficient
-       SCORE_N_1N          = -9,  & ! (n,1n) rate
-       SCORE_ABSORPTION    = -10, & ! absorption rate
-       SCORE_FISSION       = -11, & ! fission rate
-       SCORE_NU_FISSION    = -12, & ! neutron production rate
-       SCORE_KAPPA_FISSION = -13, & ! fission energy production rate
-       SCORE_CURRENT       = -14, & ! partial current
-       SCORE_EVENTS        = -15    ! number of events
-       
+       SCORE_N_1N          = -8,  & ! (n,1n) rate
+       SCORE_ABSORPTION    = -9,  & ! absorption rate
+       SCORE_FISSION       = -10, & ! fission rate
+       SCORE_NU_FISSION    = -11, & ! neutron production rate
+       SCORE_KAPPA_FISSION = -12, & ! fission energy production rate
+       SCORE_CURRENT       = -13, & ! partial current
+       SCORE_EVENTS        = -14    ! number of events
+
   ! Maximum scattering order supported
   integer, parameter :: SCATT_ORDER_MAX = 10
   character(len=*), parameter :: SCATT_ORDER_MAX_PNSTR = "scatter-p10"
@@ -313,7 +328,7 @@ module constants
 
   ! Source angular distribution types
   integer, parameter :: &
-       SRC_ANGLE_ISOTROPIC = 1, & ! Isotropic angular 
+       SRC_ANGLE_ISOTROPIC = 1, & ! Isotropic angular
        SRC_ANGLE_MONO      = 2, & ! Monodirectional source
        SRC_ANGLE_TABULAR   = 3    ! Tabular distribution
 
@@ -323,7 +338,7 @@ module constants
        SRC_ENERGY_MAXWELL = 2, & ! Maxwell fission spectrum
        SRC_ENERGY_WATT    = 3, & ! Watt fission spectrum
        SRC_ENERGY_TABULAR = 4    ! Tabular distribution
-       
+
   ! ============================================================================
   ! MISCELLANEOUS CONSTANTS
 
@@ -346,18 +361,15 @@ module constants
        MODE_FIXEDSOURCE = 1, & ! Fixed source mode
        MODE_EIGENVALUE  = 2, & ! K eigenvalue mode
        MODE_PLOTTING    = 3, & ! Plotting mode
-       MODE_TALLIES     = 4, & ! Tally results mode
-       MODE_PARTICLE    = 5    ! Particle restart mode
+       MODE_PARTICLE    = 4    ! Particle restart mode
 
   ! Unit numbers
   integer, parameter :: UNIT_SUMMARY  = 11 ! unit # for writing summary file
   integer, parameter :: UNIT_TALLY    = 12 ! unit # for writing tally file
   integer, parameter :: UNIT_PLOT     = 13 ! unit # for writing plot file
   integer, parameter :: UNIT_XS       = 14 ! unit # for writing xs summary file
-  integer, parameter :: UNIT_SOURCE   = 15 ! unit # for writing source file
-  integer, parameter :: UNIT_STATE    = 16 ! unit # for writing state point
-  integer, parameter :: CMFD_BALANCE  = 17 ! unit # for writing cmfd balance file
-  integer, parameter :: UNIT_PARTICLE = 18 ! unit # for writing particle restart
+  integer, parameter :: UNIT_PARTICLE = 15 ! unit # for writing particle restart
+  integer, parameter :: UNIT_OUTPUT   = 16 ! unit # for writing output
 
   !=============================================================================
   ! CMFD CONSTANTS
