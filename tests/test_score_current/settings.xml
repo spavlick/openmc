@@ -10,10 +10,12 @@
   <source>
     <space type="box">
       <parameters>
-        -160 -160 -183
-         160  160  183
+        -5 -5 -10
+         5  5  10
       </parameters>
     </space>
   </source>
+
+  <output tallies="false" />
 
 </settings>
