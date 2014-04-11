@@ -48,17 +48,18 @@ contains
 
   subroutine compute_xs()
 
-    use constants,    only: FILTER_MESH, FILTER_ENERGYIN, FILTER_ENERGYOUT,     &
-                            FILTER_SURFACE, IN_RIGHT, OUT_RIGHT, IN_FRONT,      &
-                            OUT_FRONT, IN_TOP, OUT_TOP, CMFD_NOACCEL, ZERO,     &
-                            ONE, TINY_BIT
-    use error,        only: fatal_error
-    use global,       only: cmfd, message, n_cmfd_tallies, cmfd_tallies, meshes,&
-                            matching_bins
-    use mesh,         only: mesh_indices_to_bin
-    use mesh_header,  only: StructuredMesh
-    use string,       only: to_str
-    use tally_header, only: TallyObject
+    use constants,       only: FILTER_MESH, FILTER_ENERGYIN, FILTER_ENERGYOUT, &
+                               FILTER_SURFACE, IN_RIGHT, OUT_RIGHT, IN_FRONT,  &
+                               OUT_FRONT, IN_TOP, OUT_TOP, CMFD_NOACCEL, ZERO, &
+                               ONE, TINY_BIT, ZERO_FLUX
+    use error,           only: fatal_error
+    use global,          only: cmfd, message, n_cmfd_tallies, cmfd_tallies, meshes,&
+                               matching_bins, cmfd_difcof
+    use mesh,            only: mesh_indices_to_bin
+    use mesh_header,     only: StructuredMesh
+    use string,          only: to_str
+    use tally_diffusion, only: calculate_diffusion
+    use tally_header,    only: TallyObject
 
     integer :: nx            ! number of mesh cells in x direction
     integer :: ny            ! number of mesh cells in y direction
@@ -175,7 +176,7 @@ contains
 
                 ! Calculate diffusion coefficient
                 if (trim(cmfd_difcof) == 'isotropic') then
-                  cmfd % diffcof(h,i,j,k) = ONE/(3.0_8*(cmfd % totalxs(h,i,j,k))
+                  cmfd % diffcof(h,i,j,k) = ONE/(3.0_8*(cmfd % totalxs(h,i,j,k)))
                 else
                   cmfd % diffcof(h,i,j,k) = ONE/(3.0_8*(cmfd % totalxs(h,i,j,k) - &
                        cmfd % p1scattxs(h,i,j,k)))
@@ -311,7 +312,8 @@ contains
         cmfd % diffcof = difcof
       end where
     end if
-
+print *, cmfd % diffcof
+stop
     ! Deallocate all variables
     deallocate(difcof)
 
@@ -641,7 +643,7 @@ contains
   subroutine compute_dhat()
 
     use constants,  only: CMFD_NOACCEL, ZERO
-    use global,     only: cmfd, cmfd_coremap, cmfd_equivalence
+    use global,     only: cmfd, cmfd_coremap
 
     integer :: nx             ! maximum number of cells in x direction
     integer :: ny             ! maximum number of cells in y direction
@@ -759,9 +761,6 @@ contains
 
               ! record dhat in cmfd object
               cmfd%dhat(l,g,i,j,k) = dhat
-
-              ! check for dhat reset
-              if (.not. cmfd_equivalence) cmfd%dhat(l,g,i,j,k) = ZERO
 
             end do LEAK
 

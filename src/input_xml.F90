@@ -1929,8 +1929,6 @@ contains
     ! READ TALLY DATA
 
     READ_TALLIES: do i = 1, n_user_tallies
-      ! check fore diffusion coefficient
-      if(i == n_user_tallies .and. difcof_mesh_ > 0) cycle
 
       ! Get pointer to tally
       t => tallies(i)

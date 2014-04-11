@@ -267,7 +267,7 @@ contains
 
     use error,         only: fatal_error
     use global,        only: meshes, tallies, difcof_mesh, n_user_tallies, &
-                             mesh_dict, message
+                             mesh_dict, message, matching_bins
     use mesh,          only: mesh_indices_to_bin
     use mesh_header,   only: StructuredMesh
     use tally_header,  only: TallyObject
@@ -323,17 +323,17 @@ contains
           GLOOP: do g = 1,N_GRPS
 
             ! reset all bins to 1
-            t % matching_bins = 1
+            matching_bins(1:t%n_filters) = 1
 
             ! set ijk as mesh indices
             ijk = (/i,j,k/)
-            t % matching_bins(i_filter_mesh) = mesh_indices_to_bin(m,ijk)
+            matching_bins(i_filter_mesh) = mesh_indices_to_bin(m,ijk)
 
             ! apply energy in filter
-            t % matching_bins(i_filter_ein) = g
+            matching_bins(i_filter_ein) = g
 
             ! calculate filter index from bins
-            filter_index = sum((t % matching_bins - 1) * t%stride) + 1
+            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t%stride) + 1
 
             ! calculate score index for H-1 total
             i_nuclide = 1

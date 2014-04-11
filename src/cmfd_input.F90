@@ -418,6 +418,7 @@ contains
         call lower_case(temp_str)
         if (trim(temp_str) == 'true' .or. trim(temp_str) == '1') &
           t % reset = .true.
+      end if
 
       ! set up diffusion coefficient tally
       if (i == 4) then
