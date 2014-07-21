@@ -16,8 +16,8 @@ for i in range(len(batch_nums)):
   ord_filenames.append('statepoint.' + str(batch_nums[i]) + '.h5') #[i] = 'statepoint.' + str(batch_nums[i]) + '.h5'
 
 #make empty lists to store entropies and kl divergences
-entropies = numpy.zeros(max(batch_nums))
-kl_divs = numpy.zeros(max(batch_nums)-1)
+entropies = numpy.zeros(len(batch_nums))
+kl_divs = numpy.zeros(len(batch_nums)-1)
 
 
 mesh_cells = literal_eval(raw_input('Enter number of mesh cells in each direction as a tuple in the form (x,y,z)'))
@@ -67,11 +67,10 @@ for index, filename in enumerate(ord_filenames):
   (cur_x,cur_y,cur_z)= lower_left
   for i in range(num_x):
     cur_x+=x_width
-    cur_y=y_left
-    cur_z=z_left
+    cur_y = y_left
     for j in range(num_y):
       cur_y+=y_width
-      cur_z=z_left
+      cur_z = z_left
       for k in range(num_z):
         cur_z+=z_width
         counter=0
@@ -79,10 +78,12 @@ for index, filename in enumerate(ord_filenames):
           (x_pos,y_pos,z_pos)=pos
           if x_pos>=last_x and x_pos<cur_x and y_pos>=last_y and y_pos<cur_y and z_pos>=last_z and z_pos<cur_z:
             counter+=1
-          cur_probs[i][j][k]=float(counter)/float(num_neutrons)
+        cur_probs[i][j][k]=float(counter)/float(num_neutrons)
         last_z=cur_z
       last_y=cur_y
+      last_z=z_left
     last_x=cur_x
+    last_y=y_left
 
   #calculating the shannon entropies
   entropy = 0
@@ -113,17 +114,15 @@ plt.title('Shannon Entropy v Batch Number')
 plt.xlabel('Batch Number')
 plt.ylabel('Shannon Entropy')
 plt.grid()
-plt.show()
 fig.savefig('shannon-entropies.png')
 
 #plotting KL Divergence
 fig = plt.figure()
-kl_batches = copy(batch_nums)
-kl_batches.pop(0)
+kl_batches = numpy.copy(batch_nums)
+kl_batches = numpy.delete(kl_batches,numpy.array([0]))
 plt.plot(kl_batches,kl_divs,'o-')
 plt.title('KL Divergence v Batch Number')
 plt.xlabel('Batch Number')
 plt.ylabel('KL Divergence')
 plt.grid()
-plt.show()
 fig.savefig('kl-divergences.png')
