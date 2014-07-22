@@ -61,26 +61,7 @@ for index, filename in enumerate(ord_filenames):
   fig.savefig('batch'+str(batch_nums[index])+'.png')
 
   #calculating mesh probabilities
-  cur_probs = numpy.zeros(mesh_cells)
-  (last_x,last_y,last_z)=lower_left
-  (cur_x,cur_y,cur_z)= lower_left
-  for i in range(num_x):
-    cur_x+=x_width
-    cur_y = y_left
-    for j in range(num_y):
-      cur_y+=y_width
-      cur_z = z_left
-      for k in range(num_z):
-        cur_z+=z_width
-        for pos in positions:
-          (x_pos,y_pos,z_pos)=pos
-          if x_pos>=last_x and x_pos<cur_x and y_pos>=last_y and y_pos<cur_y and z_pos>=last_z and z_pos<cur_z:
-            cur_probs[i][j][k]+=1
-        last_z=cur_z
-      last_y=cur_y
-      last_z=z_left
-    last_x=cur_x
-    last_y=y_left
+  cur_probs=numpy.histogramdd(positions,bins=mesh_cells)[0]
   cur_probs[:,:,:] /= float(num_neutrons)
 
   #calculating the shannon entropies
